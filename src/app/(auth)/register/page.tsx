@@ -3,6 +3,7 @@
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
 import { auth, db, collection, addDoc } from "@/firebase/config";
+import { doc, setDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
 import toast from "react-hot-toast";
@@ -100,20 +101,18 @@ export default function RegisterPage() {
         toast.error("OTP is incorrect.");
         return;
       }
-      const data = await createUserWithEmailAndPassword(auth, email, password);
-      const user = data.user;
-
+      const { user } = await createUserWithEmailAndPassword(auth, email, password);
       await updateProfile(user, { displayName: fullName });
 
-      console.log(`${fullName} ${email} ${password}`);
+      // Save user data to Firestore
+      const userDocRef = doc(db, "users", user.uid);
       const store = {
         fullName,
         email,
         password,
         timestamp: new Date().toISOString(),
       };
-      const usersCollection = collection(db, "users");
-      await addDoc(usersCollection, store);
+      await setDoc(userDocRef, store);
       toast.success("Registration successful!");
 
       console.log("User registered and profile updated:", user);
