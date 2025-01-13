@@ -36,11 +36,16 @@ export default function Home() {
     return () => unsubscribe();
   }, [router]);
 
+  const handleRedirect = () => {
+    router.push("/attendance")
+  }
+
   return (
     <div className="min-h-screen bg-gradient-to-r from-blue-500 to-teal-400 flex justify-center items-center">
       <div className="bg-white p-10 rounded-xl shadow-2xl max-w-lg w-full space-y-6">
         {/* Header Section */}
         <div className="text-center">
+          <button className="text-gray-50 border-gray-950 rounded-full bg-black py-1 px-3" onClick={handleRedirect}>Attendance</button>
           <h1 className="text-3xl font-extrabold text-gray-800 mb-2">
             Welcome, {fullName ? fullName : "Guest"}!
           </h1>
