@@ -10,6 +10,7 @@ import {
 } from "@/firebase/config";
 import { onAuthStateChanged, User } from "firebase/auth";
 import { useRouter } from "next/navigation";
+import useAuth from "../hook/useAuth";
 
 type Log = {
   id: string; // Use timestamp as the unique ID
@@ -18,6 +19,7 @@ type Log = {
 };
 
 export default function Attendance() {
+  useAuth();
   const [logs, setLogs] = useState<Log[]>([]);
   const [user, setUser] = useState<User | null>(null); // Use Firebase's User type
   const router = useRouter();
