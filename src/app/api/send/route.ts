@@ -17,7 +17,7 @@ export async function POST(req: Request) {
     }
 
     const data = await resend.emails.send({
-      from: "MERN <onboarding@resend.dev>",
+      from: "FinalExamBatch3 <onboarding@resend.dev>",
       to: [email],
       subject: "OTP Code",
       html: `<h1>Your OTP Code: ${generatedOtp}</h1>`,
