@@ -1,47 +1,51 @@
 "use client";
-// pages/index.tsx
-import { useState, useEffect } from 'react';
-import { auth, db, doc, getDoc, updateDoc, arrayUnion } from '@/firebase/config';
-import { onAuthStateChanged } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from "react";
+import {
+  auth,
+  db,
+  doc,
+  getDoc,
+  updateDoc,
+  arrayUnion,
+} from "@/firebase/config";
+import { onAuthStateChanged, User } from "firebase/auth";
+import { useRouter } from "next/navigation";
 
 type Log = {
-  id: string; // Changed id type to string (timestamp can be used as the id)
-  type: 'IN' | 'OUT';
+  id: string; // Use timestamp as the unique ID
+  type: "IN" | "OUT";
   timestamp: string;
 };
 
 export default function Attendance() {
   const [logs, setLogs] = useState<Log[]>([]);
-  const [user, setUser] = useState<any>(null); // User state to track the authenticated user
-    const router = useRouter();
+  const [user, setUser] = useState<User | null>(null); // Use Firebase's User type
+  const router = useRouter();
 
   // Fetch logs from Firestore when the component mounts
   useEffect(() => {
-    onAuthStateChanged(auth, async (currentUser) => {
+    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
-        setUser(currentUser); // Set the user when logged in
-        await fetchLogs(currentUser.uid); // Fetch the logs for the authenticated user
+        setUser(currentUser); // Set the authenticated user
+        await fetchLogs(currentUser.uid); // Fetch logs for the authenticated user
       } else {
-        setUser(null); // Set user to null when not logged in
+        setUser(null); // Clear user state when not logged in
       }
     });
+
+    return () => unsubscribe(); // Cleanup subscription on unmount
   }, []);
 
   // Fetch logs for the authenticated user
   const fetchLogs = async (userId: string) => {
     try {
       console.log(`Fetching logs for user: ${userId}`);
-      
-      const userDocRef = doc(db, 'users', userId); 
-      const docSnap = await getDoc(userDocRef); 
-      
+      const userDocRef = doc(db, "users", userId);
+      const docSnap = await getDoc(userDocRef);
+
       if (docSnap.exists()) {
-        console.log("User document exists:", docSnap.data());
-        
-        const attendanceLogs = docSnap.data()?.attendance || []; // Get the attendance data from user document
-        console.log('Fetched logs:', attendanceLogs);
-        setLogs(attendanceLogs); // Set the logs from the user document's attendance field
+        const attendanceLogs = docSnap.data()?.attendance || [];
+        setLogs(attendanceLogs); // Update the logs state
       } else {
         console.log("No such user document!");
       }
@@ -50,50 +54,53 @@ export default function Attendance() {
     }
   };
 
-  const handleLog = async (type: 'IN' | 'OUT') => {
+  const handleLog = async (type: "IN" | "OUT") => {
     if (!user) {
-      console.error('User is not authenticated.');
+      console.error("User is not authenticated.");
       return;
     }
 
     const newLog: Log = {
-      id: new Date().toISOString(), // Generate a new ID based on timestamp
+      id: new Date().toISOString(),
       type,
       timestamp: new Date().toISOString(),
     };
 
-    setLogs([newLog, ...logs]); // Update the logs state immediately with the new log
+    setLogs([newLog, ...logs]); // Optimistically update the logs
 
     try {
-      const userDoc = doc(db, 'users', user.uid); // Use authenticated user's uid
-      const updateField = {
-        attendance: arrayUnion(newLog), // Use arrayUnion to append to the attendance array
-      };
-
-      await updateDoc(userDoc, updateField); // Update the user's document with new log
+      const userDoc = doc(db, "users", user.uid);
+      await updateDoc(userDoc, {
+        attendance: arrayUnion(newLog),
+      });
     } catch (error) {
-      console.error("Error adding document: ", error);
+      console.error("Error updating document: ", error);
     }
   };
 
   const handleRedirect = () => {
-    router.push("/")
-  }
+    router.push("/");
+  };
 
   return (
     <div className="font-sans text-gray-900 min-h-screen flex flex-col justify-center items-center bg-gray-100 p-6">
-        <button className="text-gray-50 border-gray-950 rounded-full bg-black py-1 px-3" onClick={handleRedirect}>Home</button>
+      <button
+        className="text-gray-50 border-gray-950 rounded-full bg-black py-1 px-3"
+        onClick={handleRedirect}
+      >
+        Home
+      </button>
       <h1 className="text-3xl font-bold mb-6">Time-In Time-Out</h1>
 
       <div className="mb-6">
-        <button 
-          onClick={() => handleLog('IN')} 
+        <button
+          onClick={() => handleLog("IN")}
           className="bg-blue-500 text-white px-4 py-2 rounded mr-4 hover:bg-blue-600"
         >
           Time-In
         </button>
-        <button 
-          onClick={() => handleLog('OUT')} 
+        <button
+          onClick={() => handleLog("OUT")}
           className="bg-red-500 text-white px-4 py-2 rounded hover:bg-red-600"
         >
           Time-Out
@@ -106,11 +113,9 @@ export default function Attendance() {
       ) : (
         <ul className="list-none p-0">
           {logs.map((log) => (
-            <li 
-              key={log.id} // Use 'id' (timestamp in this case) as the unique key
-              className="border-b border-gray-300 py-2"
-            >
-              <strong className="text-gray-700">{log.type}</strong> at {new Date(log.timestamp).toLocaleString()}
+            <li key={log.id} className="border-b border-gray-300 py-2">
+              <strong className="text-gray-700">{log.type}</strong> at{" "}
+              {new Date(log.timestamp).toLocaleString()}
             </li>
           ))}
         </ul>

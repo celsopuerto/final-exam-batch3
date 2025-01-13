@@ -2,7 +2,7 @@
 
 import React, { useState, useRef } from "react";
 import { useRouter } from "next/navigation";
-import { auth, db, collection, addDoc } from "@/firebase/config";
+import { auth, db } from "@/firebase/config";
 import { doc, setDoc } from "firebase/firestore";
 import { createUserWithEmailAndPassword, updateProfile } from "firebase/auth";
 import { FirebaseError } from "firebase/app";
@@ -101,7 +101,11 @@ export default function RegisterPage() {
         toast.error("OTP is incorrect.");
         return;
       }
-      const { user } = await createUserWithEmailAndPassword(auth, email, password);
+      const { user } = await createUserWithEmailAndPassword(
+        auth,
+        email,
+        password
+      );
       await updateProfile(user, { displayName: fullName });
 
       // Save user data to Firestore
