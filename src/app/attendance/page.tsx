@@ -3,6 +3,7 @@
 import { useState, useEffect } from 'react';
 import { auth, db, doc, getDoc, updateDoc, arrayUnion } from '@/firebase/config';
 import { onAuthStateChanged } from 'firebase/auth';
+import { useRouter } from 'next/navigation';
 
 type Log = {
   id: string; // Changed id type to string (timestamp can be used as the id)
@@ -13,6 +14,7 @@ type Log = {
 export default function Attendance() {
   const [logs, setLogs] = useState<Log[]>([]);
   const [user, setUser] = useState<any>(null); // User state to track the authenticated user
+    const router = useRouter();
 
   // Fetch logs from Firestore when the component mounts
   useEffect(() => {
@@ -74,8 +76,13 @@ export default function Attendance() {
     }
   };
 
+  const handleRedirect = () => {
+    router.push("/")
+  }
+
   return (
     <div className="font-sans text-gray-900 min-h-screen flex flex-col justify-center items-center bg-gray-100 p-6">
+        <button className="text-gray-50 border-gray-950 rounded-full bg-black py-1 px-3" onClick={handleRedirect}>Home</button>
       <h1 className="text-3xl font-bold mb-6">Time-In Time-Out</h1>
 
       <div className="mb-6">
