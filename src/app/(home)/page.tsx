@@ -21,7 +21,7 @@ export default function Home() {
 
   useEffect(() => {
     // Function to listen for authentication state changes
-    // attendance
+    // attendance 1, 2
     const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         setFullName(user.displayName || "No name available"); // Set displayName or fallback
